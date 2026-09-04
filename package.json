@@ -1,0 +1,15 @@
+{
+  "name": "payroll-reply-checker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Client-side QA pass for AI-drafted payroll support replies. No backend, no API calls.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "og": "node scripts/generate-og.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

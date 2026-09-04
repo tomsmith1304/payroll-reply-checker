@@ -1,738 +1,93 @@
-<title>Payroll Reply Checker</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
-  :root {
-    --bg: #EDEFEA;
-    --surface: #F8F9F5;
-    --surface-2: #E3E6DD;
-    --ink: #17212C;
-    --ink-soft: #4B5560;
-    --ink-faint: #7A8590;
-    --line: #CBCFC4;
-    --accent: #2E5AAC;
-    --accent-soft: #DCE5F5;
-    --ok: #2F7A4F;
-    --ok-soft: #DCEEE1;
-    --warn: #B7791F;
-    --warn-soft: #F5E7CE;
-    --critical: #B3311F;
-    --critical-soft: #F6DCD6;
-    --shadow: 0 1px 2px rgba(23,33,44,0.06), 0 6px 20px rgba(23,33,44,0.05);
-    color-scheme: light;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #141C25;
-      --surface: #1B2530;
-      --surface-2: #232F3B;
-      --ink: #EAEDE7;
-      --ink-soft: #ABB5BC;
-      --ink-faint: #7C8792;
-      --line: #313E4A;
-      --accent: #8AAAE0;
-      --accent-soft: #223652;
-      --ok: #5FC48E;
-      --ok-soft: #1C3327;
-      --warn: #E5AC55;
-      --warn-soft: #3B2E17;
-      --critical: #E27362;
-      --critical-soft: #3E211D;
-      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.25);
-      color-scheme: dark;
-    }
-  }
-
-  :root[data-theme="dark"] {
-    --bg: #141C25;
-    --surface: #1B2530;
-    --surface-2: #232F3B;
-    --ink: #EAEDE7;
-    --ink-soft: #ABB5BC;
-    --ink-faint: #7C8792;
-    --line: #313E4A;
-    --accent: #8AAAE0;
-    --accent-soft: #223652;
-    --ok: #5FC48E;
-    --ok-soft: #1C3327;
-    --warn: #E5AC55;
-    --warn-soft: #3B2E17;
-    --critical: #E27362;
-    --critical-soft: #3E211D;
-    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.25);
-    color-scheme: dark;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-    line-height: 1.5;
-  }
-
-  .wrap {
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 40px 24px 64px;
-  }
-
-  header.page-head {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 32px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  h1 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    text-wrap: balance;
-  }
-
-  .subtitle {
-    margin: 0;
-    max-width: 62ch;
-    color: var(--ink-soft);
-    font-size: 15px;
-    text-wrap: balance;
-  }
-
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-  }
-
-  .ticket-panel {
-    padding: 20px 22px 22px;
-    margin-bottom: 24px;
-  }
-
-  .ticket-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-
-  .ticket-id {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-faint);
-    letter-spacing: 0.04em;
-  }
-
-  .example-switch {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .pill-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: var(--ink-soft);
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 6px 13px;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  }
-
-  .pill-btn:hover { border-color: var(--accent); color: var(--ink); }
-
-  .pill-btn.is-active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .pill-btn:focus-visible, button:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .ticket-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  @media (max-width: 720px) {
-    .ticket-grid { grid-template-columns: 1fr; }
-  }
-
-  .field label {
-    display: block;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin-bottom: 7px;
-  }
-
-  textarea {
-    width: 100%;
-    min-height: 168px;
-    resize: vertical;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 12px 13px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: var(--ink);
-  }
-
-  textarea::placeholder { color: var(--ink-faint); }
-
-  .ticket-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 16px;
-  }
-
-  .hint {
-    font-size: 12px;
-    color: var(--ink-faint);
-  }
-
-  .run-btn {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: #F4F6FB;
-    background: var(--accent);
-    border: none;
-    border-radius: 8px;
-    padding: 11px 20px;
-    cursor: pointer;
-    transition: filter 0.15s ease;
-  }
-
-  .run-btn:hover { filter: brightness(1.08); }
-  .run-btn:active { filter: brightness(0.96); }
-
-  .results-panel {
-    padding: 20px 22px 22px;
-  }
-
-  .results-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .results-head h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-  }
-
-  .banner {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 14px 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    background: var(--critical-soft);
-    border: 1px solid var(--critical);
-  }
-
-  .banner-icon {
-    flex: none;
-    width: 20px;
-    height: 20px;
-    margin-top: 1px;
-    border-radius: 5px;
-    background: var(--critical);
-    position: relative;
-  }
-
-  .banner-icon::before {
-    content: "!";
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--critical-soft);
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 700;
-    font-size: 13px;
-  }
-
-  .banner-title {
-    font-weight: 700;
-    color: var(--critical);
-    font-size: 14px;
-    margin-bottom: 2px;
-  }
-
-  .banner-detail {
-    font-size: 13px;
-    color: var(--ink-soft);
-  }
-
-  .banner-detail code {
-    font-family: 'IBM Plex Mono', monospace;
-    background: rgba(0,0,0,0.06);
-    padding: 1px 5px;
-    border-radius: 4px;
-  }
-
-  .summary-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-
-  .chip {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    padding: 5px 11px;
-    border-radius: 999px;
-  }
-
-  .chip-ok { background: var(--ok-soft); color: var(--ok); }
-  .chip-warn { background: var(--warn-soft); color: var(--warn); }
-  .chip-critical { background: var(--critical-soft); color: var(--critical); }
-
-  .summary-note { font-size: 12.5px; color: var(--ink-faint); }
-
-  .flag-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .flag-row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 11px 14px;
-    border-radius: 6px;
-    background: var(--surface-2);
-    border-left: 4px solid var(--line);
-  }
-
-  .flag-row.flag-warn { border-left-color: var(--warn); }
-  .flag-row.flag-critical { border-left-color: var(--critical); }
-  .flag-row.flag-ok { border-left-color: var(--ok); }
-
-  .flag-tag {
-    flex: none;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    padding-top: 2px;
-    width: 84px;
-  }
-
-  .flag-row.flag-warn .flag-tag { color: var(--warn); }
-  .flag-row.flag-critical .flag-tag { color: var(--critical); }
-  .flag-row.flag-ok .flag-tag { color: var(--ok); }
-
-  .flag-body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .flag-text {
-    font-size: 13.5px;
-    color: var(--ink);
-  }
-
-  .coverage-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-
-  .coverage-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 5px 10px 5px 8px;
-    border-radius: 999px;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    color: var(--ink-faint);
-  }
-
-  .coverage-pill::before {
-    content: "";
-    flex: none;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--line);
-  }
-
-  .coverage-pill.is-clear { color: var(--ok); }
-  .coverage-pill.is-clear::before { background: var(--ok); }
-
-  .coverage-pill.is-warn { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
-  .coverage-pill.is-warn::before { background: var(--warn); }
-
-  .coverage-pill.is-critical { color: var(--critical); border-color: var(--critical); background: var(--critical-soft); }
-  .coverage-pill.is-critical::before { background: var(--critical); }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .flag-row, .banner {
-      animation: row-in 0.28s ease both;
-    }
-    .flag-list .flag-row:nth-child(1) { animation-delay: 0.02s; }
-    .flag-list .flag-row:nth-child(2) { animation-delay: 0.06s; }
-    .flag-list .flag-row:nth-child(3) { animation-delay: 0.10s; }
-    .flag-list .flag-row:nth-child(4) { animation-delay: 0.14s; }
-    .flag-list .flag-row:nth-child(5) { animation-delay: 0.18s; }
-  }
-
-  @keyframes row-in {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  footer.page-foot {
-    margin-top: 28px;
-    padding-top: 18px;
-    border-top: 1px solid var(--line);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .how-it-works summary {
-    cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-  }
-
-  .how-it-works summary::-webkit-details-marker { display: none; }
-
-  .how-it-works summary::before {
-    content: "▸";
-    font-size: 10px;
-    color: var(--accent);
-    transition: transform 0.15s ease;
-    display: inline-block;
-  }
-
-  .how-it-works[open] summary::before { transform: rotate(90deg); }
-
-  .how-it-works summary:hover { color: var(--ink); }
-
-  .how-it-works-body {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 68ch;
-  }
-
-  .how-it-works-body p {
-    margin: 0;
-    font-size: 12.5px;
-    color: var(--ink-faint);
-    line-height: 1.6;
-  }
-
-  .how-it-works-body strong { color: var(--ink-soft); font-weight: 600; }
-
-  .built-for { font-size: 12px; color: var(--ink-faint); }
-</style>
-
-<div class="wrap">
-  <header class="page-head">
-    <span class="eyebrow">Support QA · Client-side demo</span>
-    <h1>Payroll Reply Checker</h1>
-    <p class="subtitle">A second pair of eyes for AI-drafted payroll support replies. It scans the ticket for compliance terms, escalation language, and tone before a reply goes out — no model call, nothing leaves this page.</p>
-  </header>
-
-  <section class="panel ticket-panel">
-    <div class="ticket-head">
-      <span class="ticket-id" id="ticket-id">TCKT-3381 · Certified payroll question</span>
-      <div class="example-switch" role="group" aria-label="Load an example ticket">
-        <button type="button" class="pill-btn" data-example="compliance">Compliance case</button>
-        <button type="button" class="pill-btn" data-example="escalation">Escalation case</button>
-        <button type="button" class="pill-btn" data-example="blank">Clear</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Payroll Reply Checker</title>
+
+  <meta name="description"
+        content="A client-side QA pass for AI-drafted payroll support replies. It scans the ticket for compliance terms, escalation language, and tone before a reply goes out — no model call, nothing leaves the page." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="canonical" href="https://payroll-reply-checker.vercel.app/" />
+
+  <!-- Open Graph / social share -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://payroll-reply-checker.vercel.app/" />
+  <meta property="og:site_name" content="Payroll Reply Checker" />
+  <meta property="og:title" content="Payroll Reply Checker" />
+  <meta property="og:description"
+        content="A second pair of eyes for AI-drafted payroll support replies — compliance, escalation, and tone checks that run entirely in the browser." />
+  <meta property="og:image" content="https://payroll-reply-checker.vercel.app/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Payroll Reply Checker — client-side support QA, no API calls." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Payroll Reply Checker" />
+  <meta name="twitter:description"
+        content="Compliance, escalation, and tone checks for AI-drafted payroll replies. Runs entirely in the browser." />
+  <meta name="twitter:image" content="https://payroll-reply-checker.vercel.app/assets/og-image.png" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="page-head">
+      <span class="eyebrow">Support QA · Client-side demo</span>
+      <h1>Payroll Reply Checker</h1>
+      <p class="subtitle">A second pair of eyes for AI-drafted payroll support replies. It scans the ticket for compliance terms, escalation language, and tone before a reply goes out — no model call, nothing leaves this page.</p>
+    </header>
+
+    <section class="panel ticket-panel">
+      <div class="ticket-head">
+        <span class="ticket-id" id="ticket-id">TCKT-3381 · Certified payroll question</span>
+        <div class="example-switch" role="group" aria-label="Load an example ticket">
+          <button type="button" class="pill-btn" data-example="compliance" aria-pressed="false">Compliance case</button>
+          <button type="button" class="pill-btn" data-example="escalation" aria-pressed="false">Escalation case</button>
+          <button type="button" class="pill-btn" data-example="clean" aria-pressed="false">Clean reply</button>
+          <button type="button" class="pill-btn" data-example="blank" aria-pressed="false">Clear</button>
+        </div>
       </div>
-    </div>
 
-    <div class="ticket-grid">
-      <div class="field">
-        <label for="customer-msg">Customer message</label>
-        <textarea id="customer-msg" placeholder="Paste the customer's message..."></textarea>
+      <div class="ticket-grid">
+        <div class="field">
+          <label for="customer-msg">Customer message</label>
+          <textarea id="customer-msg" placeholder="Paste the customer's message..."></textarea>
+        </div>
+        <div class="field">
+          <label for="draft-reply">Draft reply (AI-generated)</label>
+          <textarea id="draft-reply" placeholder="Paste the draft reply to review..."></textarea>
+        </div>
       </div>
-      <div class="field">
-        <label for="draft-reply">Draft reply (AI-generated)</label>
-        <textarea id="draft-reply" placeholder="Paste the draft reply to review..."></textarea>
+
+      <div class="ticket-foot">
+        <span class="hint">Checks run entirely in your browser as you click Review.</span>
+        <button type="button" class="run-btn" id="run-btn">Review reply →</button>
       </div>
-    </div>
+    </section>
 
-    <div class="ticket-foot">
-      <span class="hint">Checks run entirely in your browser as you click Review.</span>
-      <button type="button" class="run-btn" id="run-btn">Review reply →</button>
-    </div>
-  </section>
-
-  <section class="panel results-panel">
-    <div class="results-head">
-      <h2>Review results</h2>
-    </div>
-    <div id="results"></div>
-  </section>
-
-  <footer class="page-foot">
-    <details class="how-it-works">
-      <summary>How the checks work</summary>
-      <div class="how-it-works-body">
-        <p><strong>Compliance</strong> — flags any of 12 terms the customer raises that the reply never touches: certified payroll, prevailing wage, apprentice ratio/rate, overtime, union rules, per diem, fringe benefits, misclassification, 1099/W-2 status, FLSA, Davis-Bacon.</p>
-        <p><strong>Escalation</strong> — a fixed list of payroll-blocking phrases (bounced checks, missed payday, "haven't been paid," failed direct deposits) trips the red banner regardless of what the reply says.</p>
-        <p><strong>Tone</strong> — flags a reply that reads short relative to a long message, urgency or frustration with no acknowledgment before the fix, or ALL-CAPS text.</p>
-        <p>All keyword and pattern matching — no model call, nothing leaves the browser.</p>
+    <section class="panel results-panel">
+      <div class="results-head">
+        <h2>Review results</h2>
+        <button type="button" class="copy-btn" id="copy-btn" disabled>Copy results</button>
       </div>
-    </details>
-    <span class="built-for">Demo built for the Trayd support workflow</span>
-  </footer>
-</div>
+      <div id="results" role="status" aria-live="polite" aria-atomic="true"></div>
+    </section>
 
-<script>
-  var COMPLIANCE_TERMS = [
-    { label: "Certified payroll", synonyms: ["certified payroll"] },
-    { label: "Prevailing wage", synonyms: ["prevailing wage"] },
-    { label: "Apprentice ratio or rate", synonyms: ["apprentice"] },
-    { label: "Overtime", synonyms: ["overtime"] },
-    { label: "Union rules", synonyms: ["union"] },
-    { label: "Per diem", synonyms: ["per diem"] },
-    { label: "Fringe benefits", synonyms: ["fringe"] },
-    { label: "Worker misclassification", synonyms: ["misclassif"] },
-    { label: "1099 contractor status", synonyms: ["1099"] },
-    { label: "W-2 status", synonyms: ["w-2", "w2 status"] },
-    { label: "FLSA", synonyms: ["flsa"] },
-    { label: "Davis-Bacon Act", synonyms: ["davis-bacon", "davis bacon"] }
-  ];
-
-  var ESCALATION_PHRASES = [
-    "checks bounced", "check bounced", "did not run", "didn't run",
-    "have not been paid", "haven't been paid", "has not been paid", "hasn't been paid",
-    "missed pay date", "missed payday", "no paycheck", "failed again",
-    "direct deposit failed", "payroll did not process", "payroll didn't process"
-  ];
-
-  var URGENCY_WORDS = ["asap", "urgent", "immediately", "right now", "furious", "frustrated", "upset", "worried", "angry", "please help", "deadline"];
-
-  var EMPATHY_WORDS = ["sorry", "apologize", "understand", "appreciate", "hear you", "that sounds", "frustrating", "thanks for your patience", "i know this is"];
-
-  var CAPS_ALLOWLIST = ["FLSA", "OSHA", "IRS", "NYC", "USA", "ADP", "ASAP"];
-
-  var EXAMPLES = {
-    compliance: {
-      id: "TCKT-3381 · Certified payroll question",
-      customer: "Going through the certified payroll report for this week before we submit Friday morning, and a couple of things are not sitting right. We have an apprentice logged at the journeyman rate on line 4, but our approved ratio only allows him at 60% until his next step-up. Separately, Dave and Marco both show 46 hours this week and there is no overtime broken out on the report - everything is rolled into straight time. The compliance deadline is Friday morning and this needs to be fixed before it goes anywhere near the GC. Can someone take a look today?",
-      reply: "Hi there, thanks for reaching out! Everything looks good and the report is ready to go. Let us know if you need anything else!"
-    },
-    escalation: {
-      id: "TCKT-3402 · Payroll did not go through",
-      customer: "This is the second week in a row our checks bounced. Three of our carpenters just called me because their direct deposits failed again this morning. Payday was supposed to be today and there are guys standing on a job site right now asking where their money is. I need this fixed right now.",
-      reply: "Thanks for flagging this - we will look into the payroll run and get back to you within one to two business days."
-    },
-    blank: {
-      id: "TCKT-0000 · New ticket",
-      customer: "",
-      reply: ""
-    }
-  };
-
-  var customerEl = document.getElementById("customer-msg");
-  var replyEl = document.getElementById("draft-reply");
-  var resultsEl = document.getElementById("results");
-  var ticketIdEl = document.getElementById("ticket-id");
-  var runBtn = document.getElementById("run-btn");
-  var switchBtns = document.querySelectorAll(".pill-btn[data-example]");
-
-  function wordCount(str) {
-    var trimmed = str.trim();
-    if (!trimmed) return 0;
-    return trimmed.split(/\s+/).length;
-  }
-
-  function analyze(customer, reply) {
-    var cLower = customer.toLowerCase();
-    var rLower = reply.toLowerCase();
-    var flags = [];
-    var escalation = null;
-
-    for (var i = 0; i < ESCALATION_PHRASES.length; i++) {
-      if (cLower.indexOf(ESCALATION_PHRASES[i]) !== -1) { escalation = ESCALATION_PHRASES[i]; break; }
-    }
-
-    COMPLIANCE_TERMS.forEach(function (term) {
-      var raised = term.synonyms.some(function (s) { return cLower.indexOf(s) !== -1; });
-      if (!raised) return;
-      var addressed = term.synonyms.some(function (s) { return rLower.indexOf(s.trim()) !== -1; });
-      if (!addressed) {
-        flags.push({ severity: "warn", tag: "Compliance", text: "Customer raised \"" + term.label + "\" - the reply does not address it." });
-      }
-    });
-
-    var cWords = wordCount(customer);
-    var rWords = wordCount(reply);
-    if (cWords > 40 && rWords > 0 && rWords < 25) {
-      flags.push({ severity: "warn", tag: "Tone", text: "Reply is only " + rWords + " words for a " + cWords + "-word message - likely too brief to cover what was raised." });
-    }
-
-    var urgent = URGENCY_WORDS.some(function (w) { return cLower.indexOf(w) !== -1; });
-    var empathetic = EMPATHY_WORDS.some(function (w) { return rLower.indexOf(w) !== -1; });
-    if (urgent && reply.trim() && !empathetic) {
-      flags.push({ severity: "warn", tag: "Tone", text: "Message reads urgent or frustrated, but the reply does not acknowledge that before jumping to the fix." });
-    }
-
-    var capsMatches = reply.match(/\b[A-Z]{4,}\b/g) || [];
-    var shouty = capsMatches.filter(function (w) { return CAPS_ALLOWLIST.indexOf(w) === -1; });
-    if (shouty.length) {
-      flags.push({ severity: "warn", tag: "Tone", text: "Reply contains all-caps text (" + shouty.join(", ") + ") - reads as shouting." });
-    }
-
-    return { escalation: escalation, flags: flags };
-  }
-
-  function render() {
-    var customer = customerEl.value;
-    var reply = replyEl.value;
-
-    if (!customer.trim() && !reply.trim()) {
-      resultsEl.innerHTML = '<div class="flag-row"><div class="flag-tag">Waiting</div><div class="flag-body"><div class="flag-text">Paste a customer message and draft reply, or load an example, then click Review.</div></div></div>';
-      return;
-    }
-
-    var result = analyze(customer, reply);
-    var flags = result.flags;
-    var escalation = result.escalation;
-    var html = "";
-
-    var complianceCount = flags.filter(function (f) { return f.tag === "Compliance"; }).length;
-    var toneCount = flags.filter(function (f) { return f.tag === "Tone"; }).length;
-
-    html += '<div class="coverage-row">' +
-      '<span class="coverage-pill ' + (escalation ? "is-critical" : "is-clear") + '">Escalation' + (escalation ? " flagged" : " clear") + '</span>' +
-      '<span class="coverage-pill ' + (complianceCount ? "is-warn" : "is-clear") + '">Compliance' + (complianceCount ? " · " + complianceCount : " clear") + '</span>' +
-      '<span class="coverage-pill ' + (toneCount ? "is-warn" : "is-clear") + '">Tone' + (toneCount ? " · " + toneCount : " clear") + '</span>' +
-    '</div>';
-
-    if (escalation) {
-      html += '<div class="banner">' +
-        '<span class="banner-icon" aria-hidden="true"></span>' +
-        '<div>' +
-          '<div class="banner-title">Payroll-blocking - escalate immediately</div>' +
-          '<div class="banner-detail">Customer message matches an escalation pattern: <code>' + escalation + '</code></div>' +
-        '</div>' +
-      '</div>';
-    }
-
-    var chipSeverity = escalation ? "critical" : (flags.length ? "warn" : "ok");
-    var totalCount = flags.length + (escalation ? 1 : 0);
-    var chipLabel;
-    if (escalation) {
-      chipLabel = totalCount + (totalCount === 1 ? " issue - escalation" : " issues - escalation");
-    } else if (flags.length) {
-      chipLabel = flags.length + (flags.length === 1 ? " issue found" : " issues found");
-    } else {
-      chipLabel = "No issues found";
-    }
-
-    html += '<div class="summary-row">' +
-      '<span class="chip chip-' + chipSeverity + '">' + chipLabel + '</span>' +
-      '<span class="summary-note">Checked against compliance keywords, escalation language, and tone patterns.</span>' +
-    '</div>';
-
-    html += '<div class="flag-list">';
-    if (flags.length === 0 && !escalation) {
-      html += '<div class="flag-row flag-ok"><div class="flag-tag">OK</div><div class="flag-body"><div class="flag-text">No compliance or tone issues detected. The reply addresses the topics raised and reads clearly.</div></div></div>';
-    } else {
-      var order = { critical: 0, warn: 1, ok: 2 };
-      flags.sort(function (a, b) { return order[a.severity] - order[b.severity]; });
-      flags.forEach(function (f) {
-        html += '<div class="flag-row flag-' + f.severity + '"><div class="flag-tag">' + f.tag + '</div><div class="flag-body"><div class="flag-text">' + f.text + '</div></div></div>';
-      });
-    }
-    html += '</div>';
-
-    resultsEl.innerHTML = html;
-  }
-
-  function loadExample(key) {
-    var ex = EXAMPLES[key];
-    if (!ex) return;
-    customerEl.value = ex.customer;
-    replyEl.value = ex.reply;
-    ticketIdEl.textContent = ex.id;
-    switchBtns.forEach(function (btn) {
-      btn.classList.toggle("is-active", btn.getAttribute("data-example") === key);
-    });
-    render();
-  }
-
-  switchBtns.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      loadExample(btn.getAttribute("data-example"));
-    });
-  });
-
-  runBtn.addEventListener("click", render);
-
-  loadExample("compliance");
-</script>
+    <footer class="page-foot">
+      <details class="how-it-works">
+        <summary>How the checks work</summary>
+        <div class="how-it-works-body">
+          <p><strong>Compliance</strong> — flags any of 12 terms the customer raises that the reply never touches: certified payroll, prevailing wage, apprentice ratio/rate, overtime, union rules, per diem, fringe benefits, misclassification, 1099/W-2 status, FLSA, Davis-Bacon.</p>
+          <p><strong>Escalation</strong> — a fixed list of payroll-blocking phrases (bounced checks, missed payday, "haven't been paid," failed direct deposits) trips the red banner regardless of what the reply says.</p>
+          <p><strong>Tone</strong> — flags a reply that reads short relative to a long message, urgency or frustration with no acknowledgment before the fix, or ALL-CAPS text.</p>
+          <p>All keyword and pattern matching — no model call, nothing leaves the browser.</p>
+        </div>
+      </details>
+      <span class="built-for">Demo built for the Trayd support workflow</span>
+    </footer>
+  </div>
+</body>
+</html>

@@ -382,19 +382,117 @@
     color: var(--ink);
   }
 
+  .coverage-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .coverage-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 5px 10px 5px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--ink-faint);
+  }
+
+  .coverage-pill::before {
+    content: "";
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+
+  .coverage-pill.is-clear { color: var(--ok); }
+  .coverage-pill.is-clear::before { background: var(--ok); }
+
+  .coverage-pill.is-warn { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+  .coverage-pill.is-warn::before { background: var(--warn); }
+
+  .coverage-pill.is-critical { color: var(--critical); border-color: var(--critical); background: var(--critical-soft); }
+  .coverage-pill.is-critical::before { background: var(--critical); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .flag-row, .banner {
+      animation: row-in 0.28s ease both;
+    }
+    .flag-list .flag-row:nth-child(1) { animation-delay: 0.02s; }
+    .flag-list .flag-row:nth-child(2) { animation-delay: 0.06s; }
+    .flag-list .flag-row:nth-child(3) { animation-delay: 0.10s; }
+    .flag-list .flag-row:nth-child(4) { animation-delay: 0.14s; }
+    .flag-list .flag-row:nth-child(5) { animation-delay: 0.18s; }
+  }
+
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   footer.page-foot {
     margin-top: 28px;
     padding-top: 18px;
     border-top: 1px solid var(--line);
-    font-size: 12px;
-    color: var(--ink-faint);
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  footer.page-foot strong { color: var(--ink-soft); font-weight: 600; }
+  .how-it-works summary {
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .how-it-works summary::-webkit-details-marker { display: none; }
+
+  .how-it-works summary::before {
+    content: "▸";
+    font-size: 10px;
+    color: var(--accent);
+    transition: transform 0.15s ease;
+    display: inline-block;
+  }
+
+  .how-it-works[open] summary::before { transform: rotate(90deg); }
+
+  .how-it-works summary:hover { color: var(--ink); }
+
+  .how-it-works-body {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 68ch;
+  }
+
+  .how-it-works-body p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    line-height: 1.6;
+  }
+
+  .how-it-works-body strong { color: var(--ink-soft); font-weight: 600; }
+
+  .built-for { font-size: 12px; color: var(--ink-faint); }
 </style>
 
 <div class="wrap">
@@ -439,8 +537,16 @@
   </section>
 
   <footer class="page-foot">
-    <span><strong>How it works:</strong> keyword and pattern checks for certified-payroll, prevailing-wage, and compliance terms, escalation phrasing, and tone — rule-based, not AI.</span>
-    <span>Demo built for the Trayd support workflow</span>
+    <details class="how-it-works">
+      <summary>How the checks work</summary>
+      <div class="how-it-works-body">
+        <p><strong>Compliance</strong> — flags any of 12 terms the customer raises that the reply never touches: certified payroll, prevailing wage, apprentice ratio/rate, overtime, union rules, per diem, fringe benefits, misclassification, 1099/W-2 status, FLSA, Davis-Bacon.</p>
+        <p><strong>Escalation</strong> — a fixed list of payroll-blocking phrases (bounced checks, missed payday, "haven't been paid," failed direct deposits) trips the red banner regardless of what the reply says.</p>
+        <p><strong>Tone</strong> — flags a reply that reads short relative to a long message, urgency or frustration with no acknowledgment before the fix, or ALL-CAPS text.</p>
+        <p>All keyword and pattern matching — no model call, nothing leaves the browser.</p>
+      </div>
+    </details>
+    <span class="built-for">Demo built for the Trayd support workflow</span>
   </footer>
 </div>
 
@@ -557,6 +663,15 @@
     var flags = result.flags;
     var escalation = result.escalation;
     var html = "";
+
+    var complianceCount = flags.filter(function (f) { return f.tag === "Compliance"; }).length;
+    var toneCount = flags.filter(function (f) { return f.tag === "Tone"; }).length;
+
+    html += '<div class="coverage-row">' +
+      '<span class="coverage-pill ' + (escalation ? "is-critical" : "is-clear") + '">Escalation' + (escalation ? " flagged" : " clear") + '</span>' +
+      '<span class="coverage-pill ' + (complianceCount ? "is-warn" : "is-clear") + '">Compliance' + (complianceCount ? " · " + complianceCount : " clear") + '</span>' +
+      '<span class="coverage-pill ' + (toneCount ? "is-warn" : "is-clear") + '">Tone' + (toneCount ? " · " + toneCount : " clear") + '</span>' +
+    '</div>';
 
     if (escalation) {
       html += '<div class="banner">' +

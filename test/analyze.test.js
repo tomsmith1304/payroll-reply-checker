@@ -101,6 +101,27 @@ test("flags urgency in the message with no acknowledgement in the reply", () => 
   assert.ok(hasFlag(result, "Tone", "does not acknowledge"));
 });
 
+test("a profane reply always gets a critical Tone flag regardless of the message", () => {
+  const calmCustomer = "No rush at all - just confirming the per diem rate for next cycle.";
+  const reply = "Figure it out yourself, that's a stupid question you idiot.";
+
+  const result = analyze(calmCustomer, reply);
+  const flag = result.flags.find((f) => f.tag === "Tone" && f.severity === "critical");
+
+  assert.ok(flag, "expected a critical Tone flag");
+  assert.ok(flag.text.includes("profane or hostile language"));
+  assert.equal(result.escalation, null);
+});
+
+test("profanity in the customer message triggers the 'does not acknowledge' tone flag too", () => {
+  const customer = "This is bullshit, our checks are wrong again and nobody will call me back.";
+  const reply = "The payroll run will be reprocessed tonight and funds will land tomorrow.";
+
+  const result = analyze(customer, reply);
+
+  assert.ok(hasFlag(result, "Tone", "does not acknowledge"));
+});
+
 test("no urgency tone flag when the reply acknowledges the customer first", () => {
   const customer = "I am extremely frustrated - this is the third time and I need it fixed immediately.";
   const reply =

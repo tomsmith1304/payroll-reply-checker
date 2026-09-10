@@ -64,6 +64,12 @@ export const EMPATHY_WORDS = [
 /** All-caps tokens that are legitimate acronyms, not shouting. */
 export const CAPS_ALLOWLIST = ["FLSA", "OSHA", "IRS", "NYC", "USA", "ADP", "ASAP"];
 
+/** Profane or hostile terms - urgency signal in a message, never acceptable in a reply. */
+export const PROFANITY_TERMS = [
+  "fuck", "shit", "asshole", "bullshit", "screw you", "piss off",
+  "idiot", "moron", "shut up",
+];
+
 /* -----------------------------------------------------------------------------
    2. ANALYSIS
    -------------------------------------------------------------------------- */
@@ -151,13 +157,24 @@ export function analyze(customer, reply) {
   }
 
   // --- Tone: urgency with no acknowledgement ----------------------------
-  const urgent = URGENCY_WORDS.some((w) => cLower.includes(w));
+  const urgent =
+    URGENCY_WORDS.some((w) => cLower.includes(w)) ||
+    PROFANITY_TERMS.some((w) => cLower.includes(w));
   const empathetic = EMPATHY_WORDS.some((w) => rLower.includes(w));
   if (urgent && reply.trim() && !empathetic) {
     flags.push({
       severity: "warn",
       tag: "Tone",
       text: "Message reads urgent or frustrated, but the reply does not acknowledge that before jumping to the fix.",
+    });
+  }
+
+  // --- Tone: profane or hostile language in the reply ----------------
+  if (PROFANITY_TERMS.some((w) => rLower.includes(w))) {
+    flags.push({
+      severity: "critical",
+      tag: "Tone",
+      text: "Reply contains profane or hostile language directed at the customer and must not be sent as written.",
     });
   }
 

@@ -98,6 +98,7 @@ function countByTag(flags) {
 function buildResultsHtml(result) {
   const { escalation, flags } = result;
   const { compliance, tone } = countByTag(flags);
+  const toneCritical = flags.some((f) => f.tag === "Tone" && f.severity === "critical");
   let html = "";
 
   // Coverage pills: one per check, clear / warn / critical.
@@ -114,7 +115,7 @@ function buildResultsHtml(result) {
     (compliance ? " · " + compliance : " clear") +
     "</span>" +
     '<span class="coverage-pill ' +
-    (tone ? "is-warn" : "is-clear") +
+    (toneCritical ? "is-critical" : tone ? "is-warn" : "is-clear") +
     '">Tone' +
     (tone ? " · " + tone : " clear") +
     "</span>" +
@@ -135,7 +136,8 @@ function buildResultsHtml(result) {
   }
 
   // One-line summary chip.
-  const chipSeverity = escalation ? "critical" : flags.length ? "warn" : "ok";
+  const chipSeverity =
+    escalation || toneCritical ? "critical" : flags.length ? "warn" : "ok";
   const totalCount = flags.length + (escalation ? 1 : 0);
   let chipLabel;
   if (escalation) {

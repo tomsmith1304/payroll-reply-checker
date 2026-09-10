@@ -140,6 +140,13 @@ test("flags all-caps shouting but ignores allow-listed acronyms", () => {
   assert.equal(hasFlag(acronymsOnly, "Tone", "all-caps"), false);
 });
 
+test("flags a non-empty customer message with an empty draft reply as nothing to review", () => {
+  const result = analyze("Can you confirm the per diem rate for the Albany crew?", "   ");
+
+  assert.ok(hasFlag(result, "Tone", "nothing to review"));
+  assert.ok(result.flags.length > 0, "expected a flag, not an all-clear result");
+});
+
 /* ---- Clean case ------------------------------------------------------- */
 
 test("a reply that addresses the topic, matches length, and stays calm produces no flags", () => {

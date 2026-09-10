@@ -131,6 +131,15 @@ export function analyze(customer, reply) {
     }
   }
 
+  // --- Tone: nothing to review yet ------------------------------------
+  if (!reply.trim() && customer.trim()) {
+    flags.push({
+      severity: "warn",
+      tag: "Tone",
+      text: "No draft reply has been entered yet - there is nothing to review.",
+    });
+  }
+
   // --- Compliance: topic raised by customer, absent from reply -----------
   for (const term of COMPLIANCE_TERMS) {
     const raised = term.synonyms.some((s) => cLower.includes(s));
